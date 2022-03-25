@@ -1,6 +1,8 @@
 var express=require('express');
 var router= express.Router();
 var fs = require('fs-extra');
+var auth=require('../config/auth');
+var isUser=auth.isUser;
 
 // Get Product model
 var Product = require('../models/product');
@@ -49,6 +51,7 @@ router.get('/:category', function (req, res) {
 router.get('/:category/:product', function (req, res) {
 
     var galleryImages = null;
+    var loggedIn = (req.isAuthenticated()) ? true : false;
    
 
     Product.findOne({slug: req.params.product}, function (err, product) {
@@ -66,7 +69,8 @@ router.get('/:category/:product', function (req, res) {
                     res.render('product', {
                         title: product.title,
                         p: product,
-                        galleryImages: galleryImages
+                        galleryImages: galleryImages,
+                        loggedIn:loggedIn
                         
                     });
                 }
