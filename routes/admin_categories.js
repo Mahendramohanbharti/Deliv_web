@@ -78,7 +78,13 @@ router.post('/add-category', function (req, res) {
                     //         req.app.locals.pages = pages;
                     //     }
                     // });
-
+                    Category.find(function (err, categories) {
+                        if (err) {
+                            console.log(err);
+                        } else {
+                            req.app.locals.categories = categories;
+                        }
+                    });
                     req.flash('success', 'Category added!');
                     res.redirect('/admin/categories');
                 });
@@ -182,7 +188,13 @@ router.post('/edit-category/:id', function (req, res) {
                         //         req.app.locals.pages = pages;
                         //     }
                         // });
-    
+                        Category.find(function (err, categories) {
+                            if (err) {
+                                console.log(err);
+                            } else {
+                                req.app.locals.categories = categories;
+                            }
+                        });
                         req.flash('success', 'Category added!');
                         res.redirect('/admin/categories/edit-category/'+id);
                     });
@@ -196,15 +208,23 @@ router.post('/edit-category/:id', function (req, res) {
 });
 
 /* 
-Get Delete Page
+Get Delete Category
 */
 
-router.get('/delete-page/:id',function(req,res){
-    Page.findByIdAndRemove(req.params.id,function(err){
+router.get('/delete-category/:id',function(req,res){
+    Category.findByIdAndRemove(req.params.id,function(err){
         if(err) return console.log(err);
 
-        req.flash('success', 'Page deleted!');
-        res.redirect('/admin/pages/');
+        Category.find(function (err, categories) {
+            if (err) {
+                console.log(err);
+            } else {
+                req.app.locals.categories = categories;
+            }
+        });
+
+        req.flash('success', 'Category deleted!');
+        res.redirect('/admin/categories/');
 
     })
     

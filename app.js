@@ -5,6 +5,7 @@ var config=require('./config/database');
 var bodyParser=require('body-parser');
 var session=require('express-session');
 var expressValidator = require('express-validator');
+var fileUpload = require('express-fileupload');
 
 //connect to db
 mongoose.connect(config.database);
@@ -33,6 +34,34 @@ app.use(express.static(path.join(__dirname,'public')));
 // set global error variable
 
 app.locals.errors=null;
+
+// get page model
+var Page=require('./models/page');
+
+//get all pages to pass the header.ejs
+Page.find({}).sort({sorting: 1}).exec(function (err, pages) {
+    if(err){
+        console.log(err);
+    }else{
+        app.locals.pages=pages;
+    }
+});
+
+// get category model
+var Category=require('./models/category');
+
+//get all categories to pass the header.ejs
+
+Category.find(function (err, categories) {
+    if (err) {
+        console.log(err);
+    } else {
+        app.locals.categories = categories;
+    }
+});
+
+//express fileUpload middleware
+app.use(fileUpload());
 
 // bodyparser middleware
 // parse application/x-www-form-urlencoded
@@ -64,24 +93,25 @@ app.use(session({
             msg: msg,
             value: value
         };
+    },
+
+    customValidators: {
+        isImage: function (value, filename) {
+            var extension = (path.extname(filename)).toLowerCase();
+            switch (extension) {
+                case '.jpg':
+                    return '.jpg';
+                case '.jpeg':
+                    return '.jpeg';
+                case '.png':
+                    return '.png';
+                case '':
+                    return '.jpg';
+                default:
+                    return false;
+            }
+        }
     }
-    // customValidators: {
-    //     isImage: function (value, filename) {
-    //         var extension = (path.extname(filename)).toLowerCase();
-    //         switch (extension) {
-    //             case '.jpg':
-    //                 return '.jpg';
-    //             case '.jpeg':
-    //                 return '.jpeg';
-    //             case '.png':
-    //                 return '.png';
-    //             case '':
-    //                 return '.jpg';
-    //             default:
-    //                 return false;
-    //         }
-    //     }
-    // }
 }));
 
 //express messages middleware
@@ -92,14 +122,25 @@ app.use(function (req, res, next) {
   next();
 });
 
+app.get('*', function(req,res,next) {
+    res.locals.cart = req.session.cart;
+    res.locals.user = req.user || null;
+    next();
+ });
 //Set routes
 
 var pages=require('./routes/pages.js');
+var products=require('./routes/products.js');
+var cart=require('./routes/cart.js');
 var adminPages=require('./routes/admin_pages.js')
 var adminCategories=require('./routes/admin_categories.js')
+var adminProducts=require('./routes/admin_products.js')
 
 app.use('/admin/pages',adminPages);
 app.use('/admin/categories',adminCategories);
+app.use('/admin/products',adminProducts);
+app.use('/products',products);
+app.use('/cart',cart);
 app.use('/',pages);
 
 //Start server
